@@ -1,0 +1,4 @@
+matplotlib
+tensorflow
+pyyaml
+h5py
