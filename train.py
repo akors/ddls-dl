@@ -10,7 +10,7 @@ import tensorflow as tf
 import data
 import nn_model
 
-def main(model_file: Optional[str], epochs: int, log_dir: Optional[str] = None, augmentation: data.AugmentMode = data.AugmentMode.OFF):
+def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: Optional[str] = None, augmentation: data.AugmentMode = data.AugmentMode.OFF):
     model = nn_model.create_model()
 
     model.summary()
@@ -18,7 +18,7 @@ def main(model_file: Optional[str], epochs: int, log_dir: Optional[str] = None, 
     #(train_images, train_labels), (test_images, test_labels) = data.make_traintest_sets()
 
     dataprepper = data.PrepDataset(
-        batch_size=64, 
+        batch_size=batchsize, 
         aggressive_augmentation=(augmentation == data.AugmentMode.AGGRESSIVE),
         rotation_factor=0.10, 
         zoom_factor=0.10, 
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
+    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training (default: 64).")
 
     args = parser.parse_args()
 
@@ -86,4 +87,4 @@ if __name__ == "__main__":
 
     print(f"Training epochs: {args.epochs}")
 
-    main(args.output_file, args.epochs, log_dir=args.log_dir, augmentation=augmentation)
+    main(args.output_file, args.epochs, batchsize=args.batch_size, log_dir=args.log_dir, augmentation=augmentation)
