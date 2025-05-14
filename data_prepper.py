@@ -4,14 +4,19 @@ from tensorflow.keras import datasets
 from augmentation import DataAugmentation, AggressiveDataAugmentation
 
 class PrepDataset:
-    def __init__(self, batch_size=64, aggressive_augmentation=False):
+    def __init__(   self, 
+                    batch_size=64, 
+                    aggressive_augmentation=False,
+                    rotation_factor=0.10, 
+                    zoom_factor=0.10, 
+                    translation_factor=0.10):
         self.batch_size = batch_size
         self.model = None
         self.history = None
         if aggressive_augmentation:
-            self.augmenter = AggressiveDataAugmentation()
+            self.augmenter = AggressiveDataAugmentation(rotation_factor, zoom_factor, translation_factor)
         else:
-            self.augmenter = DataAugmentation()
+            self.augmenter = DataAugmentation(rotation_factor, zoom_factor, translation_factor)
         
     def load_data(self):
         """Load and normalize CIFAR-10 dataset"""
@@ -32,3 +37,45 @@ class PrepDataset:
             
         ds = ds.batch(self.batch_size).prefetch(tf.data.AUTOTUNE)
         return ds
+    
+"""
+    def train(self, train_ds, test_ds, epochs=100):
+        # Train model with early stopping
+        early_stop = tf.keras.callbacks.EarlyStopping(
+            monitor='val_accuracy',
+            patience=10,
+            restore_best_weights=True
+        )
+        
+        self.model.compile(
+            optimizer='adam',
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+            metrics=['accuracy']
+        )
+        
+        self.history = self.model.fit(
+            train_ds, 
+            epochs=epochs, 
+            validation_data=test_ds, 
+            callbacks=[early_stop]
+        )
+        
+        return self.history
+
+if __name__ == '__main__':
+    # Create model instance
+    cifar_model = PrepDataset(batch_size=64)
+    
+    # Load data
+    (train_images, train_labels), (test_images, test_labels) = cifar_model.load_data()
+    
+    # Create datasets
+    train_ds = cifar_model.create_dataset(train_images, train_labels, augment=True)
+    test_ds = cifar_model.create_dataset(test_images, test_labels, augment=False)
+    
+    # Build and train model
+    cifar_model.build_custom_cnn()
+    cifar_model.model.summary()
+    cifar_model.train(train_ds, test_ds)x
+
+"""
