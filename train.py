@@ -10,7 +10,7 @@ import tensorflow as tf
 import data
 import nn_model
 
-def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: Optional[str] = None, augmentation: data.AugmentMode = data.AugmentMode.OFF):
+def main(model_file: Optional[str], epochs: int, batchsize: int = 256, log_dir: Optional[str] = None, augmentation: data.AugmentMode = data.AugmentMode.OFF):
     model = nn_model.create_model()
 
     model.summary()
@@ -68,10 +68,10 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: O
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an image recognition CNN")
     parser.add_argument("output_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created")
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10).")
+    parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs (default: 20).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
-    parser.add_argument("--batch_size", type=int, default=64, help="Batch size for training (default: 64).")
+    parser.add_argument("--batch_size", type=int, default=256, help="Batch size for training (default: 256).")
 
     args = parser.parse_args()
 
