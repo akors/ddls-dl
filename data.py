@@ -1,5 +1,6 @@
 
 
+from enum import StrEnum
 from typing import Tuple
 from numpy.typing import ArrayLike
 
@@ -10,6 +11,13 @@ import augmentation
 
 class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
+
+
+# class syntax
+class AugmentMode(StrEnum):
+    OFF = "off"
+    BASIC = "basic"
+    AGGRESSIVE = "aggressive"
 
 
 class PrepDataset:
