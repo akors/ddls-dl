@@ -70,9 +70,20 @@ if __name__ == "__main__":
     parser.add_argument("output_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created")
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
-    parser.add_argument("--augmentations", default=data.AugmentMode.OFF, choices=[data.AugmentMode.OFF, data.AugmentMode.BASIC, data.AugmentMode.AGGRESSIVE])
-    
+    parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
+
     args = parser.parse_args()
+
+    if args.augmentations == "off":
+        augmentation = data.AugmentMode.OFF
+    elif args.augmentations == "basic":
+        augmentation = data.AugmentMode.BASIC
+    elif args.augmentations == "basic":
+        augmentation = data.AugmentMode.AGGRESSIVE
+    else:
+        raise KeyError(f"Unknown augmentation mode {args.augmentations}")
+
+
     print(f"Training epochs: {args.epochs}")
 
-    main(args.output_file, args.epochs, log_dir=args.log_dir, augmentation=data.AugmentMode(args.augmentations))
+    main(args.output_file, args.epochs, log_dir=args.log_dir, augmentation=augmentation)
