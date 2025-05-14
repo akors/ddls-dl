@@ -15,7 +15,25 @@ def main(model_file: Optional[str], epochs: int, log_dir: Optional[str] = None):
 
     model.summary()
 
-    (train_images, train_labels), (test_images, test_labels) = data.make_traintest_sets()
+    #(train_images, train_labels), (test_images, test_labels) = data.make_traintest_sets()
+
+    dataprepper = data.PrepDataset(
+                batch_size=64, 
+                aggressive_augmentation=False,
+                rotation_factor=0.10, 
+                zoom_factor=0.10, 
+                translation_factor=0.10
+    )
+                    
+    # Load CIFAR-10 dataset
+    dataprepper.load_data(tf.keras.datasets.cifar10.load_data())
+    
+    # Create training dataset with augmentation
+    train_ds = dataprepper.create_dataset(dataprepper.train_images, dataprepper.train_labels, augment=False)
+    
+    # Create test dataset without augmentation
+    test_ds = dataprepper.create_dataset(dataprepper.test_images, dataprepper.test_labels, augment=False)
+    
 
     model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -27,10 +45,17 @@ def main(model_file: Optional[str], epochs: int, log_dir: Optional[str] = None):
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-    history = model.fit(train_images, train_labels, epochs=10, 
-                        validation_data=(test_images, test_labels), callbacks=[tensorboard_callback])
+    # history = model.fit(train_images, train_labels, epochs=10, 
+    #                     validation_data=(test_images, test_labels), callbacks=[tensorboard_callback])
+    history = model.fit(
+        train_ds, 
+        epochs=epochs, 
+        validation_data=test_ds, 
+        callbacks=[tensorboard_callback]
+    )
 
-    test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+    #test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+    test_loss, test_acc = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
     print(f"Final test loss: {test_loss:.4f}")
