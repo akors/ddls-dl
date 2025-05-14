@@ -78,7 +78,7 @@ if __name__ == "__main__":
         augmentation = data.AugmentMode.OFF
     elif args.augmentations == "basic":
         augmentation = data.AugmentMode.BASIC
-    elif args.augmentations == "basic":
+    elif args.augmentations == "aggressive":
         augmentation = data.AugmentMode.AGGRESSIVE
     else:
         raise KeyError(f"Unknown augmentation mode {args.augmentations}")
