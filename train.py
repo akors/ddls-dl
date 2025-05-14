@@ -15,8 +15,6 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 256, log_dir: 
 
     model.summary()
 
-    #(train_images, train_labels), (test_images, test_labels) = data.make_traintest_sets()
-
     dataprepper = data.PrepDataset(
         batch_size=batchsize, 
         aggressive_augmentation=(augmentation == data.AugmentMode.AGGRESSIVE),
@@ -45,8 +43,6 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 256, log_dir: 
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-    # history = model.fit(train_images, train_labels, epochs=10, 
-    #                     validation_data=(test_images, test_labels), callbacks=[tensorboard_callback])
     history = model.fit(
         train_ds, 
         epochs=epochs, 
@@ -54,7 +50,6 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 256, log_dir: 
         callbacks=[tensorboard_callback]
     )
 
-    #test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
     test_loss, test_acc = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
