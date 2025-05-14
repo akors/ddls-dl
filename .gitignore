@@ -1,0 +1,3 @@
+logs/
+*.keras
+**/__pycache__
