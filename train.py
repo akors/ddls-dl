@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("output_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created")
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
-    parser.add_argument("--augmentations", choices=[data.AugmentMode.OFF, data.AugmentMode.BASIC, data.AugmentMode.AGGRESSIVE])
+    parser.add_argument("--augmentations", default=data.AugmentMode.OFF, choices=[data.AugmentMode.OFF, data.AugmentMode.BASIC, data.AugmentMode.AGGRESSIVE])
     
     args = parser.parse_args()
     print(f"Training epochs: {args.epochs}")
