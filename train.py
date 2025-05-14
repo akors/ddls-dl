@@ -33,11 +33,6 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: O
     
     # Create test dataset without augmentation
     test_ds = dataprepper.create_dataset(dataprepper.test_images, dataprepper.test_labels, augment=False)
-    
-
-    model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
 
     if log_dir is None:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -45,21 +40,38 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: O
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-    # history = model.fit(train_images, train_labels, epochs=10, 
-    #                     validation_data=(test_images, test_labels), callbacks=[tensorboard_callback])
-    history = model.fit(
-        train_ds, 
-        epochs=epochs, 
-        validation_data=test_ds, 
-        callbacks=[tensorboard_callback]
+    lr_schedule = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss', mode='auto', factor=0.5, patience=5, min_delta=1e-6, min_lr=1e-8
     )
 
-    #test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
-    test_loss, test_acc = model.evaluate(test_ds, verbose=2)
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+    model.compile(optimizer=optimizer,
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+            metrics=['accuracy', 'SparseCategoricalCrossentropy'])
+
+
+    checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
+        "best_model.keras", save_best_only=True, monitor='val_loss', mode='min', verbose=1
+    )
+
+    history = model.fit(
+        train_ds,
+        batch_size=batchsize,
+        epochs=epochs,
+        validation_data=test_ds,
+        callbacks=[checkpoint_cb, lr_schedule, early_stopping, tensorboard_callback]
+    )
+
+
+    test_loss, test_acc, test_ce = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
     print(f"Final test loss: {test_loss:.4f}")
-
+    print(f"Final test ce: {test_ce:.4f}")
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
