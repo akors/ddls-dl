@@ -2,7 +2,13 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 class DataAugmentation:
-    """Class to handle data augmentation for image datasets"""
+    """
+    Class to handle data augmentation for image datasets
+    
+    Augmentation is applied at the individual image level during dataset mapping,
+    which happens when the dataset is consumed (during training).
+    Each time an image is fetched from the dataset, a new random augmentation is applied.
+    """
     
     def __init__(self, rotation_factor=0.10, zoom_factor=0.10, translation_factor=0.10):
         """
@@ -28,12 +34,23 @@ class DataAugmentation:
         ])
     
     def augment(self, images, training=True):
-        """Apply augmentation to images"""
+        """
+        Apply augmentation to images
+        
+        This is called for each individual image during dataset mapping.
+        A new random augmentation is applied each time this is called.
+        """
         return self.augmentation_pipeline(images, training=training)
     
     
 class AggressiveDataAugmentation:
-    """Class to handle more aggressive data augmentation with RandAugment-style operations"""
+    """
+    Class to handle more aggressive data augmentation with RandAugment-style operations
+    
+    Like the standard DataAugmentation class, augmentation is applied at the individual image level
+    during dataset mapping. Each time an image is fetched from the dataset, a new random
+    augmentation is applied with more aggressive transformations.
+    """
     
     def __init__(self, rotation_factor=0.10, zoom_factor=0.10, translation_factor=0.10, image_size=32, crop_padding=8, num_ops=2):
         """
@@ -42,7 +59,7 @@ class AggressiveDataAugmentation:
         Args:
             rotation_factor: Maximum rotation angle in radians (for compatibility with DataAugmentation)
             zoom_factor: Maximum zoom factor (for compatibility with DataAugmentation)
-            translation_factor: Maximum translation as fraction of image dimensions (for compatibility with DataAugmentation)
+            translation_factor: Maximum translation as fraction of dimensions (for compatibility with DataAugmentation)
             image_size: Size of input images (assumes square)
             crop_padding: Amount of padding to add before random crop
             num_ops: Number of random augmentation ops to apply
@@ -79,6 +96,9 @@ class AggressiveDataAugmentation:
         """
         Apply augmentation to images
         
+        This is called for each individual image during dataset mapping.
+        A new random augmentation is applied each time this is called.
+        
         Args:
             images: Batch of images to augment
             training: Whether to apply augmentation (only applied during training)
@@ -98,7 +118,14 @@ class AggressiveDataAugmentation:
     
     @tf.function
     def _augment_single(self, image):
-        """Apply aggressive augmentation to a single image"""
+        """
+        Apply aggressive augmentation to a single image
+        
+        This applies a sequence of transformations to each individual image:
+        1. Random crop with padding and horizontal flip
+        2. Affine transformations (rotation, zoom, translation)
+        3. RandAugment-style operations (randomly selected)
+        """
         # Step 1: Pad + crop + flip
         padded_size = self.image_size + self.crop_padding
         image = tf.image.resize_with_crop_or_pad(image, padded_size, padded_size)
@@ -115,7 +142,12 @@ class AggressiveDataAugmentation:
     
     @tf.function
     def _rand_augment(self, image, N=2):
-        """Apply N randomly selected augmentation operations"""
+        """
+        Apply N randomly selected augmentation operations
+        
+        This randomly selects N operations from the available transformations
+        and applies them in sequence to the image.
+        """
         def rotate(img):
             flip = tf.random.uniform((), 0, 1)
             return tf.image.rot90(img, k=tf.cast(flip > 0.5, tf.int32))
