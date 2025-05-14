@@ -18,9 +18,9 @@ class PrepDataset:
         else:
             self.augmenter = DataAugmentation(rotation_factor, zoom_factor, translation_factor)
         
-    def load_data(self):
+    def load_data(self, dataset):
         """Load and normalize CIFAR-10 dataset"""
-        (self.train_images, self.train_labels), (self.test_images, self.test_labels) = datasets.cifar10.load_data()
+        (self.train_images, self.train_labels), (self.test_images, self.test_labels) = dataset
         return (self.train_images, self.train_labels), (self.test_images, self.test_labels)
     
     def create_dataset(self, images, labels, augment=False):
@@ -63,19 +63,17 @@ class PrepDataset:
         return self.history
 
 if __name__ == '__main__':
-    # Create model instance
-    cifar_model = PrepDataset(batch_size=64)
-    
-    # Load data
-    (train_images, train_labels), (test_images, test_labels) = cifar_model.load_data()
-    
-    # Create datasets
-    train_ds = cifar_model.create_dataset(train_images, train_labels, augment=True)
-    test_ds = cifar_model.create_dataset(test_images, test_labels, augment=False)
-    
-    # Build and train model
-    cifar_model.build_custom_cnn()
-    cifar_model.model.summary()
-    cifar_model.train(train_ds, test_ds)x
+    prepper = PrepDataset(
+                    batch_size=64, 
+                    aggressive_augmentation=False,
+                    rotation_factor=0.10, 
+                    zoom_factor=0.10, 
+                    translation_factor=0.10
+                    )
+                    
+    prepper.load_data(datasets.cifar10.load_data())
+    train_ds = prepper.create_dataset(prepper.train_images, prepper.train_labels, augment=True)
+    test_ds = prepper.create_dataset(prepper.test_images, prepper.test_labels, augment=False)
+
 
 """
