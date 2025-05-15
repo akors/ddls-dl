@@ -3,12 +3,45 @@
 import argparse
 import datetime
 import os
+import subprocess
 from typing import Optional
 
+import numpy as np
 import tensorflow as tf
 
 import data
 import nn_model
+
+def get_num_params(model):
+    trainable_params = np.sum([np.prod(v.shape) for v in model.trainable_weights])
+    return trainable_params.item()
+
+
+def get_git_branch():
+    wd = os.path.dirname(__file__)
+    try:
+        result = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], stdout=subprocess.PIPE, cwd=wd)
+    except FileNotFoundError:
+        # Could not find git binary
+        return None
+
+    if result.returncode != 0:
+        return None
+    else:
+        return result.stdout.decode('ascii').strip()
+
+def get_git_revision_short_hash():
+    wd = os.path.dirname(__file__)
+    try:
+        result = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE, cwd=wd)
+    except FileNotFoundError:
+        # Could not find git binary
+        return None
+
+    if result.returncode != 0:
+        return None
+    else:
+        return result.stdout.decode('ascii').strip()
 
 def main(
     model_file: Optional[str],
@@ -59,7 +92,7 @@ def main(
     ]
 
     # %% model training
-    model.fit(
+    history = model.fit(
         train_ds, 
         epochs=epochs, 
         validation_data=test_ds, 
@@ -76,6 +109,18 @@ def main(
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
+
+    report_dict = {
+        "branch": get_git_branch(),
+        "commit": get_git_revision_short_hash(),
+        "num_params": get_num_params(model),
+        "train_loss": model.history.history['loss'][-1], 
+        "test_loss": test_loss,
+        "epochs": len(model.history.history['loss']),
+        "batchsize": batchsize
+    }
+
+    print(report_dict)
 
 
 if __name__ == "__main__":
