@@ -113,22 +113,23 @@ def main(
             loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
             metrics=['accuracy'])
 
-    checkpoint_filepath = '/tmp/ckpt/checkpoint.model.keras'
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        checkpoint_filepath, 
-        save_best_only=True, 
-        monitor='val_loss', 
-        mode='min', 
-        verbose=1
-    )
-
     callbacks = [
-        model_checkpoint_callback,
         lr_schedule,
         early_stopping,
         tensorboard_callback
     ]
 
+    if model_file is not None:
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            model_file, 
+            save_best_only=True, 
+            monitor='val_loss', 
+            mode='min', 
+            verbose=1
+        )
+
+        callbacks.append(model_checkpoint_callback)
+ 
     history = model.fit(
         train_ds, 
         epochs=epochs, 
