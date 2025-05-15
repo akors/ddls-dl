@@ -2,7 +2,7 @@
 from tensorflow import keras
 from tensorflow.keras import datasets, layers, models
 
-def create_model():
+def create_model(use_softmax=True):
     input = keras.Input(shape=(32, 32, 3), name="img")
 
 
@@ -25,6 +25,8 @@ def create_model():
     x = layers.Dense(32, activation='relu')(x)
     output = layers.Dense(10)(x)
 
+    if use_softmax:
+        output = layers.Softmax()(output)
 
     model = keras.Model(input, output, name="cnn")
 
