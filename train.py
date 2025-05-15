@@ -53,16 +53,20 @@ def main(model_file: Optional[str], epochs: int, batchsize: int = 64, log_dir: O
             loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
             metrics=['accuracy', tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)])
 
-
-    checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
-        "best_model.keras", save_best_only=True, monitor='val_loss', mode='min', verbose=1
+    checkpoint_filepath = '/tmp/ckpt/checkpoint.model.keras'
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        checkpoint_filepath, 
+        save_best_only=True, 
+        monitor='val_loss', 
+        mode='min', 
+        verbose=1
     )
 
     history = model.fit(
         train_ds,
         epochs=epochs,
         validation_data=test_ds,
-        callbacks=[checkpoint_cb, lr_schedule, early_stopping, tensorboard_callback]
+        callbacks=[model_checkpoint_callback, lr_schedule, early_stopping, tensorboard_callback]
     )
 
 
