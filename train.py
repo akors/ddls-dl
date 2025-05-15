@@ -17,9 +17,17 @@ def main(
     log_dir: Optional[str] = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
 ):
+    # %% creating & compiling model
     model = nn_model.create_model()
 
     model.summary()
+
+    model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+    
+    
+    # %% load data
 
     dataprepper = data.PrepDataset(
         batch_size=batchsize, 
@@ -38,10 +46,7 @@ def main(
     # Create test dataset without augmentation
     test_ds = dataprepper.create_dataset(dataprepper.test_images, dataprepper.test_labels, augment=False)
     
-
-    model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+    # %% logging setup
 
     if log_dir is None:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -49,18 +54,25 @@ def main(
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
-    history = model.fit(
+    callbacks = [
+        tensorboard_callback
+    ]
+
+    # %% model training
+    model.fit(
         train_ds, 
         epochs=epochs, 
         validation_data=test_ds, 
-        callbacks=[tensorboard_callback]
+        callbacks=callbacks
     )
 
+    # %% evaluate model
     test_loss, test_acc = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
     print(f"Final test loss: {test_loss:.4f}")
 
+    # %% save model file if required
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
