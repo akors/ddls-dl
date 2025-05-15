@@ -9,7 +9,6 @@ from typing import Optional
 import numpy as np
 import tensorflow as tf
 
-from confusion_matrix import ConfusionMatrixPlotter
 import data
 import nn_model
 
@@ -70,6 +69,7 @@ def main(
     epochs: int,
     batchsize: int = 256,
     log_dir: Optional[str] = None,
+    confusion_matrix_plotfile = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
 ):
     # %% creating & compiling model
@@ -131,15 +131,15 @@ def main(
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
-        
-    # After training your model
-    confusion_plotter = ConfusionMatrixPlotter(model, test_ds)
+    
+    if confusion_matrix_plotfile is not None:
+        from confusion_matrix import ConfusionMatrixPlotter
 
-    # Save regular confusion matrix
-    confusion_plotter.plot_confusion_matrix('confusion_matrix.png')
+        # After training your model
+        confusion_plotter = ConfusionMatrixPlotter(model, test_ds)
 
-    # Save normalized confusion matrix (shows percentages)
-    confusion_plotter.plot_normalized_confusion_matrix('normalized_confusion_matrix.png')
+        # Save regular confusion matrix
+        confusion_plotter.plot_confusion_matrix(confusion_matrix_plotfile)
 
     report_dict = {
         "branch": get_git_branch(),
@@ -161,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
     parser.add_argument("--batch_size", type=int, default=256, help="Batch size for training (default: 256).")
+    parser.add_argument("--confusion_matrix", type=str, default=None)
 
     args = parser.parse_args()
 
@@ -173,7 +174,12 @@ if __name__ == "__main__":
     else:
         raise KeyError(f"Unknown augmentation mode {args.augmentations}")
 
-
     print(f"Training epochs: {args.epochs}")
 
-    main(args.output_file, args.epochs, batchsize=args.batch_size, log_dir=args.log_dir, augmentation=augmentation)
+    main(
+        args.output_file,
+        args.epochs,
+        batchsize=args.batch_size,
+        log_dir=args.log_dir,
+        confusion_matrix_plotfile=args.confusion_matrix,
+        augmentation=augmentation)
