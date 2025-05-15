@@ -72,17 +72,10 @@ def main(
     confusion_matrix_plotfile = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
 ):
-    # %% creating & compiling model
     model = nn_model.create_model()
 
     model.summary()
-
-    model.compile(optimizer='adam',
-              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
-              metrics=['accuracy'])
     
-    
-    # %% load data
 
     dataprepper = data.PrepDataset(
         batch_size=batchsize, 
@@ -100,20 +93,41 @@ def main(
     
     # Create test dataset without augmentation
     test_ds = dataprepper.create_dataset(dataprepper.test_images, dataprepper.test_labels, augment=False)
-    
-    # %% logging setup
-
     if log_dir is None:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
+    lr_schedule = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss', mode='auto', factor=0.5, patience=5, min_delta=1e-6, min_lr=1e-8
+    )
+
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+
+    model.compile(optimizer=optimizer,
+            loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+            metrics=['accuracy'])
+
+    checkpoint_filepath = '/tmp/ckpt/checkpoint.model.keras'
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        checkpoint_filepath, 
+        save_best_only=True, 
+        monitor='val_loss', 
+        mode='min', 
+        verbose=1
+    )
+
     callbacks = [
+        model_checkpoint_callback,
+        lr_schedule,
+        early_stopping,
         tensorboard_callback
     ]
 
-    # %% model training
     history = model.fit(
         train_ds, 
         epochs=epochs, 
@@ -121,13 +135,11 @@ def main(
         callbacks=callbacks
     )
 
-    # %% evaluate model
     test_loss, test_acc = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
     print(f"Final test loss: {test_loss:.4f}")
 
-    # %% save model file if required
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
