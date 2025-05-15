@@ -24,7 +24,7 @@ def create_model():
     x = layers.Dense(128, activation='relu')(x)
     x = layers.Dense(32, activation='relu')(x)
     output = layers.Dense(10)(x)
-
+    output = layers.Softmax()(output)
 
     model = keras.Model(input, output, name="cnn")
 

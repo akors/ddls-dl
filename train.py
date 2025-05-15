@@ -9,6 +9,7 @@ from typing import Optional
 import numpy as np
 import tensorflow as tf
 
+from confusion_matrix import ConfusionMatrixPlotter
 import data
 import nn_model
 
@@ -77,7 +78,7 @@ def main(
     model.summary()
 
     model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
               metrics=['accuracy'])
     
     
@@ -130,6 +131,15 @@ def main(
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
+        
+    # After training your model
+    confusion_plotter = ConfusionMatrixPlotter(model, test_ds)
+
+    # Save regular confusion matrix
+    confusion_plotter.plot_confusion_matrix('confusion_matrix.png')
+
+    # Save normalized confusion matrix (shows percentages)
+    confusion_plotter.plot_normalized_confusion_matrix('normalized_confusion_matrix.png')
 
     report_dict = {
         "branch": get_git_branch(),
