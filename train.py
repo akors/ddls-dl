@@ -10,7 +10,13 @@ import tensorflow as tf
 import data
 import nn_model
 
-def main(model_file: Optional[str], epochs: int, batchsize: int = 256, log_dir: Optional[str] = None, augmentation: data.AugmentMode = data.AugmentMode.OFF):
+def main(
+    model_file: Optional[str],
+    epochs: int,
+    batchsize: int = 256,
+    log_dir: Optional[str] = None,
+    augmentation: data.AugmentMode = data.AugmentMode.OFF
+):
     model = nn_model.create_model()
 
     model.summary()
