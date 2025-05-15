@@ -68,6 +68,7 @@ def main(
     model_file: Optional[str],
     epochs: int,
     batchsize: int = 256,
+    learning_rate: float = 1e-3,
     log_dir: Optional[str] = None,
     confusion_matrix_plotfile = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
@@ -106,7 +107,7 @@ def main(
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
 
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     model.compile(optimizer=optimizer,
             loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
@@ -174,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
     parser.add_argument("--batch_size", type=int, default=256, help="Batch size for training (default: 256).")
     parser.add_argument("--confusion_matrix", type=str, default=None)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
 
     args = parser.parse_args()
 
@@ -192,6 +194,7 @@ if __name__ == "__main__":
         args.output_file,
         args.epochs,
         batchsize=args.batch_size,
+        learning_rate=args.learning_rate,
         log_dir=args.log_dir,
         confusion_matrix_plotfile=args.confusion_matrix,
         augmentation=augmentation)
