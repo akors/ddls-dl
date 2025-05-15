@@ -1,4 +1,5 @@
-from enum import StrEnum
+
+from enum import Enum
 from typing import Tuple
 from numpy.typing import ArrayLike
 import numpy as np
@@ -13,7 +14,7 @@ class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
 
 
 # class syntax
-class AugmentMode(StrEnum):
+class AugmentMode(Enum):
     OFF = "off"
     BASIC = "basic"
     AGGRESSIVE = "aggressive"
