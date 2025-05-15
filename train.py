@@ -43,6 +43,27 @@ def get_git_revision_short_hash():
     else:
         return result.stdout.decode('ascii').strip()
 
+
+def report_dict_to_markdown_table(report_dict):
+    report_dict = dict(report_dict)
+    report_dict['test_loss'] = f"{report_dict['test_loss']:.3e}"
+    report_dict['train_loss'] = f"{report_dict['train_loss']:.3e}"
+
+    headers = list(report_dict.keys())
+    values = [str(v) for v in report_dict.values()]
+    separators = []
+
+    for ki in range(len(report_dict)):
+        l = max(len(headers[ki]), len(values[ki]))
+        separators.append("-"*l)
+        headers[ki] = headers[ki] + " "* (l - len(headers[ki]))
+        values[ki] = values[ki] + " "* (l - len(values[ki]))
+
+    header = "| " + " | ".join(headers) + " |"
+    separator = "| " + " | ".join(separators) + " |"
+    values = "| " + " | ".join(values) + " |"
+    return "\n".join([header, separator, values])
+
 def main(
     model_file: Optional[str],
     epochs: int,
@@ -114,13 +135,13 @@ def main(
         "branch": get_git_branch(),
         "commit": get_git_revision_short_hash(),
         "num_params": get_num_params(model),
-        "train_loss": model.history.history['loss'][-1], 
         "test_loss": test_loss,
+        "train_loss": model.history.history['loss'][-1], 
         "epochs": len(model.history.history['loss']),
         "batchsize": batchsize
     }
 
-    print(report_dict)
+    print(report_dict_to_markdown_table(report_dict))
 
 
 if __name__ == "__main__":
