@@ -1,4 +1,3 @@
-
 from tensorflow.keras import datasets, layers, models
 
 def create_model():
@@ -17,8 +16,9 @@ def create_model():
     # %% dense final layers
     model.add(layers.Flatten())
     model.add(layers.Dense(128, activation='relu'))
+    model.add(layers.Dense(64, activation='relu'))
     model.add(layers.Dense(32, activation='relu'))
-    model.add(layers.Dense(10))
+    model.add(layers.Dense(10, activation='softmax'))
     model.summary()
 
     return model

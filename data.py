@@ -1,11 +1,10 @@
-
-
 from enum import StrEnum
 from typing import Tuple
 from numpy.typing import ArrayLike
-
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
+# from scipy.ndimage import zoom
 
 import augmentation
 
@@ -62,6 +61,11 @@ class PrepDataset:
             Tuple of (train_images, train_labels), (test_images, test_labels)
         """
         (self.train_images, self.train_labels), (self.test_images, self.test_labels) = dataset
+        
+        # One-hot encode the labels
+        self.train_labels = tf.keras.utils.to_categorical(self.train_labels, num_classes=10)
+        self.test_labels = tf.keras.utils.to_categorical(self.test_labels, num_classes=10)
+        
         return (self.train_images, self.train_labels), (self.test_images, self.test_labels)
     
     def create_dataset(self, images, labels, augment=False):
