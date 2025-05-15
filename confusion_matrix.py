@@ -123,15 +123,3 @@ class ConfusionMatrixPlotter:
         # Save the plot
         plt.savefig(output_path)
         plt.close()
-
-# Example usage:
-"""
-# After training your model:
-confusion_plotter = ConfusionMatrixPlotter(model, test_dataset)
-
-# Save regular confusion matrix
-confusion_plotter.plot_confusion_matrix('confusion_matrix.png')
-
-# Save normalized confusion matrix
-confusion_plotter.plot_normalized_confusion_matrix('normalized_confusion_matrix.png')
-""" 

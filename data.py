@@ -61,7 +61,15 @@ class PrepDataset:
             Tuple of (train_images, train_labels), (test_images, test_labels)
         """
         (self.train_images, self.train_labels), (self.test_images, self.test_labels) = dataset
+        # new_train_images = np.zeros((self.train_images.shape[0], 32, 32, 1))
+        # new_test_images = np.zeros((self.test_images.shape[0], 32, 32, 1))
         
+        # for i, image in enumerate(self.train_images):
+        #     new_train_images[i] = tf.image.rgb_to_grayscale(image)
+        # for i, image in enumerate(self.test_images):
+        #     new_test_images[i] = tf.image.rgb_to_grayscale(image)
+        # self.train_images = new_train_images
+        # self.test_images = new_test_images
         # One-hot encode the labels
         self.train_labels = tf.keras.utils.to_categorical(self.train_labels, num_classes=10)
         self.test_labels = tf.keras.utils.to_categorical(self.test_labels, num_classes=10)

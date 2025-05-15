@@ -10,7 +10,7 @@ class DataAugmentation:
     Each time an image is fetched from the dataset, a new random augmentation is applied.
     """
     
-    def __init__(self, rotation_factor=0.50, zoom_factor=0.10, translation_factor=0.10):
+    def __init__(self, rotation_factor=0.20, zoom_factor=0.10, translation_factor=0.10):
         """
         Initialize data augmentation with configurable parameters
         
@@ -27,7 +27,8 @@ class DataAugmentation:
     def _create_pipeline(self):
         """Create the augmentation pipeline with current parameters"""
         return tf.keras.Sequential([
-            layers.RandomFlip("horizontal_and_vertical"),
+            # layers.RandomFlip("horizontal_and_vertical"),
+            layers.RandomFlip("horizontal"),
             layers.RandomRotation(self.rotation_factor),
             # layers.RandomZoom(self.zoom_factor),
             # layers.RandomTranslation(self.translation_factor, self.translation_factor),
