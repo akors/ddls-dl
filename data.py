@@ -110,7 +110,7 @@ class PrepDataset:
         # Create dataset from tensors
         ds = tf.data.Dataset.from_tensor_slices((images, labels))
         # Shuffle at epoch level with buffer size 10000
-        ds = ds.shuffle(10000)
+        ds = ds.shuffle(60000)
         
         if augment:
             # Apply augmentation at individual image level during iteration
