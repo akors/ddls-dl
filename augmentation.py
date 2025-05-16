@@ -27,12 +27,23 @@ class DataAugmentation:
     def _create_pipeline(self):
         """Create the augmentation pipeline with current parameters"""
         return tf.keras.Sequential([
-            layers.RandomFlip("horizontal_and_vertical"),
-            layers.RandomRotation(self.rotation_factor),
+            layers.RandomFlip("horizontal"),
+            # layers.RandomRotation(self.rotation_factor),
+            # layers.RandomZoom(self.zoom_factor),
+            # layers.RandomTranslation(self.translation_factor, self.translation_factor),
+            # MixUp augmentation
+            layers.Lambda(lambda x: tf.map_fn(
+                lambda img: tf.cond(
+                    tf.random.uniform([]) < 1.0,  # 50% chance to apply mixup
+                    lambda: 0.9 * img + 0.1 * tf.roll(img, shift=1, axis=0),  # Mix with next image
+                    lambda: img
+                ),
+                x
+            ))
             # layers.RandomZoom(self.zoom_factor),
             # layers.RandomTranslation(self.translation_factor, self.translation_factor),
         ])
-    
+
     def augment(self, images, training=True):
         """
         Apply augmentation to images

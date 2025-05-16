@@ -9,7 +9,6 @@ from typing import Optional
 import numpy as np
 import tensorflow as tf
 
-from confusion_matrix import ConfusionMatrixPlotter
 import data
 import nn_model
 
@@ -69,20 +68,19 @@ def main(
     model_file: Optional[str],
     epochs: int,
     batchsize: int = 256,
+    learning_rate: float = 1e-3,
     log_dir: Optional[str] = None,
+    continue_training=False,
+    confusion_matrix_plotfile = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
 ):
-    # %% creating & compiling model
-    model = nn_model.create_model()
+    if not continue_training:
+        model = nn_model.create_model()
+    else:
+        model = tf.keras.models.load_model(model_file)
 
     model.summary()
-
-    model.compile(optimizer='adam',
-              loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
-              metrics=['accuracy'])
     
-    
-    # %% load data
 
     dataprepper = data.PrepDataset(
         batch_size=batchsize, 
@@ -100,20 +98,42 @@ def main(
     
     # Create test dataset without augmentation
     test_ds = dataprepper.create_dataset(dataprepper.test_images, dataprepper.test_labels, augment=False)
-    
-    # %% logging setup
-
     if log_dir is None:
         log_dir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     
     os.makedirs(log_dir, exist_ok=True)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
+    lr_schedule = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss', mode='auto', factor=0.5, patience=5, min_delta=1e-6, min_lr=1e-8
+    )
+
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15)
+
+
+    optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=1e-4)
+
+    model.compile(optimizer=optimizer,
+            loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+            metrics=['accuracy'])
+
     callbacks = [
+        lr_schedule,
+        early_stopping,
         tensorboard_callback
     ]
 
-    # %% model training
+    if model_file is not None:
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            model_file, 
+            save_best_only=True, 
+            monitor='val_loss', 
+            mode='min', 
+            verbose=1
+        )
+
+        callbacks.append(model_checkpoint_callback)
+ 
     history = model.fit(
         train_ds, 
         epochs=epochs, 
@@ -121,25 +141,23 @@ def main(
         callbacks=callbacks
     )
 
-    # %% evaluate model
     test_loss, test_acc = model.evaluate(test_ds, verbose=2)
 
     print(f"Final test accuracy: {test_acc:.4f}")
     print(f"Final test loss: {test_loss:.4f}")
 
-    # %% save model file if required
     if model_file is not None:
         print(f"Saving model to {model_file}")
         model.save(model_file)
-        
-    # After training your model
-    confusion_plotter = ConfusionMatrixPlotter(model, test_ds)
+    
+    if confusion_matrix_plotfile is not None:
+        from confusion_matrix import ConfusionMatrixPlotter
 
-    # Save regular confusion matrix
-    confusion_plotter.plot_confusion_matrix('confusion_matrix.png')
+        # After training your model
+        confusion_plotter = ConfusionMatrixPlotter(model, test_ds)
 
-    # Save normalized confusion matrix (shows percentages)
-    confusion_plotter.plot_normalized_confusion_matrix('normalized_confusion_matrix.png')
+        # Save regular confusion matrix
+        confusion_plotter.plot_confusion_matrix(confusion_matrix_plotfile)
 
     report_dict = {
         "branch": get_git_branch(),
@@ -156,11 +174,14 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an image recognition CNN")
-    parser.add_argument("output_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created")
+    parser.add_argument("model_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created or loaded")
     parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs (default: 20).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
     parser.add_argument("--batch_size", type=int, default=256, help="Batch size for training (default: 256).")
+    parser.add_argument("--confusion_matrix", type=str, default=None)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
+    parser.add_argument("--continue", action='store_true', dest="continue_training")
 
     args = parser.parse_args()
 
@@ -173,7 +194,17 @@ if __name__ == "__main__":
     else:
         raise KeyError(f"Unknown augmentation mode {args.augmentations}")
 
+    if args.continue_training and args.model_file is None:
+        parser.error("When continuing training, model file name is mandatory")
 
     print(f"Training epochs: {args.epochs}")
 
-    main(args.output_file, args.epochs, batchsize=args.batch_size, log_dir=args.log_dir, augmentation=augmentation)
+    main(
+        args.model_file,
+        args.epochs,
+        batchsize=args.batch_size,
+        learning_rate=args.learning_rate,
+        log_dir=args.log_dir,
+        continue_training=args.continue_training,
+        confusion_matrix_plotfile=args.confusion_matrix,
+        augmentation=augmentation)
