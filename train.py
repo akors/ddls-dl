@@ -108,7 +108,7 @@ def main(
         monitor='val_loss', mode='auto', factor=0.5, patience=5, min_delta=1e-6, min_lr=1e-8
     )
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15)
 
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
