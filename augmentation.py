@@ -43,6 +43,15 @@ class DataAugmentation:
             # layers.RandomZoom(self.zoom_factor),
             # layers.RandomTranslation(self.translation_factor, self.translation_factor),
         ])
+
+    def augment(self, images, training=True):
+        """
+        Apply augmentation to images
+        
+        This is called for each individual image during dataset mapping.
+        A new random augmentation is applied each time this is called.
+        """
+        return self.augmentation_pipeline(images, training=training)
     
     
 class AggressiveDataAugmentation:
