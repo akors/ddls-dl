@@ -70,10 +70,14 @@ def main(
     batchsize: int = 256,
     learning_rate: float = 1e-3,
     log_dir: Optional[str] = None,
+    continue_training=False,
     confusion_matrix_plotfile = None,
     augmentation: data.AugmentMode = data.AugmentMode.OFF
 ):
-    model = nn_model.create_model()
+    if not continue_training:
+        model = nn_model.create_model()
+    else:
+        model = tf.keras.models.load_model(model_file)
 
     model.summary()
     
@@ -170,13 +174,14 @@ def main(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train an image recognition CNN")
-    parser.add_argument("output_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created")
+    parser.add_argument("model_file", nargs='?', type=str, default=None, help="Path to the checkpoint file that will be created or loaded")
     parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs (default: 20).")
     parser.add_argument("--log_dir", type=str, default=None, help="Directory for TensorBoard logs (default: logs/fit/YYYmmdd-HHMMSS).")
     parser.add_argument("--augmentations", default="off", choices=["off", "basic", "aggressive"])
     parser.add_argument("--batch_size", type=int, default=256, help="Batch size for training (default: 256).")
     parser.add_argument("--confusion_matrix", type=str, default=None)
     parser.add_argument("--learning_rate", type=float, default=1e-3)
+    parser.add_argument("--continue", action='store_true', dest="continue_training")
 
     args = parser.parse_args()
 
@@ -189,13 +194,17 @@ if __name__ == "__main__":
     else:
         raise KeyError(f"Unknown augmentation mode {args.augmentations}")
 
+    if args.continue_training and args.model_file is None:
+        parser.error("When continuing training, model file name is mandatory")
+
     print(f"Training epochs: {args.epochs}")
 
     main(
-        args.output_file,
+        args.model_file,
         args.epochs,
         batchsize=args.batch_size,
         learning_rate=args.learning_rate,
         log_dir=args.log_dir,
+        continue_training=args.continue_training,
         confusion_matrix_plotfile=args.confusion_matrix,
         augmentation=augmentation)
