@@ -111,7 +111,7 @@ def main(
     early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15)
 
 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    optimizer = tf.keras.optimizers.AdamW(learning_rate=learning_rate, weight_decay=1e-4)
 
     model.compile(optimizer=optimizer,
             loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
