@@ -5,10 +5,11 @@ from numpy.typing import ArrayLike
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
+import numpy as np
 # from scipy.ndimage import zoom
 
 import augmentation
-
+import pandas as pd
 class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer',
                'dog', 'frog', 'horse', 'ship', 'truck']
 
@@ -62,6 +63,25 @@ class PrepDataset:
             Tuple of (train_images, train_labels), (test_images, test_labels)
         """
         (self.train_images, self.train_labels), (self.test_images, self.test_labels) = dataset
+        
+         # Combine train and test sets
+        all_images = np.concatenate([self.train_images, self.test_images], axis=0)
+        all_labels = np.concatenate([self.train_labels, self.test_labels], axis=0)
+        # Load indices from CSV files
+        train_indices = pd.read_csv('y_train.csv').iloc[:, 0].values
+        val_indices = pd.read_csv('y_val.csv').iloc[:, 0].values
+        
+        # Split data according to indices
+        self.train_images = all_images[train_indices]
+        self.train_labels = all_labels[train_indices]
+        self.test_images = all_images[val_indices] 
+        self.test_labels = all_labels[val_indices]
+        print(self.train_images.shape)
+        print(self.train_labels.shape)
+        print(self.test_images.shape)
+        print(self.test_labels.shape)
+        
+        
         
         # One-hot encode the labels
         self.train_labels = tf.keras.utils.to_categorical(self.train_labels, num_classes=10)
