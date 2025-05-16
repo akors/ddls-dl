@@ -34,8 +34,11 @@ def create_model(use_softmax=True):
 
     # %% dense final layers
     x = layers.Flatten()(x)
+    x = layers.Dropout(.3)(x)
     x = layers.Dense(96, activation='relu')(x)
+    x = layers.Dropout(.3)(x)
     x = layers.Dense(32, activation='relu')(x)
+    x = layers.Dropout(.1)(x)
     output = layers.Dense(10)(x)
 
     if use_softmax:
