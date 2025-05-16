@@ -14,23 +14,27 @@ def create_model(use_softmax=True):
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = layers.MaxPooling2D((2, 2))(x)
-    x = layers.Conv2D(32, (3, 3))(x)
+    skip1 = x
+    x = layers.Conv2D(32, (3, 3), padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
+    skip2 = x
     x = layers.Conv2D(64, (3, 3), padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
     x = layers.Conv2D(32, (1, 1), padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
+    x = x + skip2
     x = layers.Conv2D(16, (1, 1), padding="same")(x)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
+    x = x + skip1
     x = layers.MaxPooling2D((2, 2))(x)
 
     # %% dense final layers
     x = layers.Flatten()(x)
-    x = layers.Dense(128, activation='relu')(x)
+    x = layers.Dense(96, activation='relu')(x)
     x = layers.Dense(32, activation='relu')(x)
     output = layers.Dense(10)(x)
 
